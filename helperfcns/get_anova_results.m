@@ -36,15 +36,20 @@ switch(test_type)
         stats= ranova(rm); ranova_pval= stats.pValue(1); 
         multcmp= multcompare(rm, 'Measurements');                           % Mult. Comparisons with HSD
        
-        m_tbl= mauchly(rm);                                                 % Mauchly test of sphericity
+        m_tbl= mauchly(rm);
+        % Mauchly test of sphericity
         if m_tbl.pValue < 0.05
             fprintf(['The assumption of sphericity is violated (Mauchly''s Test), ',...
-                'chi^2(%d) = %.02f, p < %.02f, and therefore,',...
+                'chi^2(%d) = %.02f, p < %.03d, and therefore,',...
             'a Greenhouse-Geisser correction is used.\n'],m_tbl.DF, m_tbl.ChiStat, m_tbl.pValue)
             ranova_pval= stats.pValueGG; 
         end
         
-        fprintf('F(%d, %d)= %.02f, p= %.03f \n', length(data), stats.DF(1), stats.F(1), ranova_pval)
+        fprintf('F(%d,%d)= %0.02f p= \n', length(data), stats.DF(1), stats.F(1))
+        
+        disp(ranova_pval)
+    
+      
         
     % Grouped within-subjects repeated measures design
     case 'rm_anova_level' 
@@ -53,7 +58,7 @@ switch(test_type)
         stats= ranova(rm); interact_pval= stats.pValue(2);   
         multcmp= multcompare(rm, level, 'By', 'Measurements');              % simple effect with HSD
         
-        fprintf('Interaction between measurements and %s: F(%d, %d)= %.02f, p= %.3g \n',...
+        fprintf('Interaction between measurements and %s: F(%d, %d)= %.02f, p= %.03g \n',...
         level, length(data), stats.DF(2), stats.F(2), interact_pval)
 
     % Non parametric Within subjects repeated measures design      

@@ -4,12 +4,14 @@ function f= anova_fig(data, data_tbl, multcmp, level)
 meas= data_tbl.Properties.VariableNames; 
 
 % Set color scheme
-cols= parula;
+cols=[[0, 0.4470, 0.7410]; [0.4660, 0.6740, 0.1880]; [0.6350, 0.0780, 0.1840];[0.8500, 0.3250, 0.0980]];
+%cols=[[0.4660, 0.6740, 0.1880]; [0.6350, 0.0780, 0.1840];[0.8500, 0.3250, 0.0980]];
+%cols= parula;
 
-f= figure(1); clf; hold on
+f= figure(); clf; hold on
 
 % Scatter plot of data, separate into categories if level is included
-if nargin > 3
+if (nargin < 4 || ~isempty(level))
     
     cats= unique(data_tbl.(level)); 
     x_disp=linspace(-.1,.1, length(cats));
@@ -33,10 +35,10 @@ sigstar(num2cell(p_row,2), multcmp.pValue(sig_p(p_ind)))
 
 end
 
-h=boxplot(data, 'Colors', cols(1:10:size(data,2)*10,:)); set(h,{'linew'},{1.5})
+h=boxplot(data, 'Colors', cols(1:size(data,2),:)); set(h,{'linew'},{1.5})
 
 xticklabels(meas);
-y_lim= get(gca, 'Ylim'); ylim([y_lim(1), y_lim(2)*1.1])
+y_lim= get(gca, 'Ylim'); ylim([y_lim(1), y_lim(2)*1.15])
 
 set(gcf, 'Position', [484   665   440   266])
 
