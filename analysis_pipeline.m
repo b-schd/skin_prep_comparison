@@ -10,20 +10,33 @@ addpath('helperfcns')
 % transform
 
 close all;
-get_anova_results(log(Z10_min.t0), varfun(@log, Z10_min_tbl.t0), 'rm_anova'); 
-title('Skin Prep Methods at t0, 10Hz');  ylabel('Impedance (log \Omega)', 'interpreter', 'tex')
 
-[st1,st]=get_anova_results(log(Z1k_min.t0),varfun(@log, Z1k_min_tbl.t0), 'rm_anova'); 
-title('Skin Prep Methods at t0, 1kHz');  ylabel('Impedance (log \Omega)', 'interpreter', 'tex')
+% min of two arms @10Hz
+[~,mltcmp]= get_anova_results(log(Z10_min.t0), varfun(@log, Z10_min_tbl.t0), 'rm_anova', [], false); 
+anova_fig(Z10_min.t0, Z10_min_tbl.t0, mltcmp, []); y_lim= get(gca, 'Ylim'); ylim([y_lim(1), y_lim(2)*1.05])
+title('Skin Prep Methods at t0, 10Hz');  ylabel('Impedance (\Omega)', 'interpreter', 'tex')
 
-% Use all subjects 
-get_anova_results(log(Z10_allT.t0), varfun(@log,Z10_allT_tbl.t0), 'rm_anova'); 
-title('Skin Prep Methods at t0, min 10Hz');  ylabel('Impedance (log \Omega)', 'interpreter', 'tex')
+% mean of two arms @10k
+[~,mltcmp]= get_anova_results(log(Z10_mean.t0), varfun(@log, Z10_mean_tbl.t0), 'rm_anova', [], true); 
+anova_fig(Z10_mean.t0, Z10_mean_tbl.t0, mltcmp, []); y_lim= get(gca, 'Ylim'); ylim([y_lim(1), y_lim(2)*1.05])
+title('Skin Prep Methods at t0, 10Hz');  ylabel('Impedance (\Omega)', 'interpreter', 'tex')
+
+% Use all data points 
+[~,mltcmp]=get_anova_results(log(Z10_allT.t0), varfun(@log,Z10_allT_tbl.t0), 'rm_anova', []); 
+anova_fig(Z10_allT.t0, Z10_allT_tbl.t0, mltcmp, []); 
+title('Skin Prep Methods at t0, min 10Hz');  ylabel('Impedance (\Omega)', 'interpreter', 'tex')
 
 %get_anova_results(log(Z1k_allT.t0), varfun(@log, Z1k_allT_tbl.t0), 'rm_anova'); 
-get_anova_results(Z1k_allT.t0, Z1k_allT_tbl.t0, 'rm_anova'); 
+get_anova_results(Z1k_allT.t0, Z1k_allT_tbl.t0, 'rm_anova', []); 
 title('Skin Prep Methods at t0, all subjects 1kHz');  ylabel('Impedance (\Omega)', 'interpreter', 'tex')
 
+% right arm only at 10 Hz, 
+tp='tf';
+rt_arm_data= [Z10_min.(tp)(:,1), Z10_allT.(tp)(1:2:end,:)];
+rt_arm_data_tbl= [Z10_mean_tbl.(tp)(:,1), Z10_allT_tbl.(tp)(1:2:end,:)];
+[~,mltcmp]= get_anova_results(log(rt_arm_data), varfun(@log,rt_arm_data_tbl), 'rm_anova', [], true); 
+%anova_fig(rt_arm_data, rt_arm_data_tbl, mltcmp, []);
+title(sprintf('Skin Prep Methods at %s, 10Hz', tp));  ylabel('Impedance (\Omega)', 'interpreter', 'tex')
 
 %% Q2: Does skin prep method have an effect on impedance over time (tmid/t0) ?
 
@@ -43,7 +56,7 @@ ylabel('Z/Z_0 at 1KHz (a.u.)', 'interpreter', 'tex')
 
 %% Q3: Does gender introduce an interaction with skin prep effect?
 
-gender=cell(height(data_tbl), 1); 
+gender=cell(length(Z1k_min.tmid), 1); 
 gender(SUBJ_info(3:16,2)==0)= {'M'}; gender(SUBJ_info(3:16,2)==1)= {'F'}; 
 
 data_tbl= varfun(@log, Z10_min_tbl.t0); data_tbl.gender= gender; data= log(Z10_min.t0);
@@ -70,10 +83,73 @@ data_tbl= Z1k_allT_tbl.t0; data_tbl.gender= repelem(gender,2); data= Z1k_allT.t0
 title('Skin Prep Methods at t0, 1kHz');  ylabel('Impedance (\Omega)', 'interpreter', 'tex')
 
 
+% Use right arm data
+close all;
+tp='t0';
+rt_arm_data= log([Z10_min.(tp)(:,1), Z10_allT.(tp)(1:2:end,:)]);
+rt_arm_data_tbl= varfun(@log, [Z10_mean_tbl.(tp)(:,1), Z10_allT_tbl.(tp)(1:2:end,:)]); 
+rt_arm_data_tbl.gender= gender;
+[~,multcmp_10]=get_anova_results(rt_arm_data, rt_arm_data_tbl, 'rm_anova_level', 'gender', true);
+title('Skin Prep Methods at t0, 10Hz');  ylabel('Impedance (log \Omega)', 'interpreter', 'tex')
+
+%% Plot Genders
+
+tp='t0'
+rt_arm_data= [Z10_min.(tp)(:,1), Z10_allT.(tp)(1:2:end,:)]
+cols=[[0, 0.4470, 0.7410]; [0.4660, 0.6740, 0.1880]; [0.6350, 0.0780, 0.1840];[0.8500, 0.3250, 0.0980]];
+M=find(SUBJ_info(3:16,2)==0);
+F=find(SUBJ_info(3:16,2)==1);
+
+
+rt_arm_data(M)
+a=[-.25,.25];
+close all; 
+
+semilogy(1+a,mean(rt_arm_data(M,1))*[1,1]/1000, 'black')
+hold on;
+semilogy(4+a,mean(rt_arm_data(M,2))*[1,1]/1000, 'black')
+semilogy(7+a,mean(rt_arm_data(M,3))*[1,1]/1000, 'black')
+semilogy(10+a,mean(rt_arm_data(M,4))*[1,1]/1000, 'black')
+set(gca, 'ColorOrder', cols)
+
+semilogy(repmat([1,4,7,10],length(M),1), rt_arm_data(M,:)/1000, '.', 'MarkerSize', 20)
+semilogy(repmat([1.5,4.5,7.5,10.5],length(F),1), rt_arm_data(F,:)/1000, 'x', 'MarkerSize', 12)
+
+semilogy(1.5+a,mean(rt_arm_data(F,1))*[1,1]/1000, 'black')
+semilogy(4.5+a,mean(rt_arm_data(F,2))*[1,1]/1000, 'black')
+semilogy(7.5+a,mean(rt_arm_data(F,3))*[1,1]/1000, 'black')
+semilogy(10.5+a,mean(rt_arm_data(F,4))*[1,1]/1000, 'black')
+set(gca, 'ColorOrder', cols)
+
+grid on
+xticks([1,4,7,10]+.25)
+ylim([0.1, 1000])
+%xticklabels(Z10_allT_tbl.(tp).Properties.VariableNames)
+ylabel('Z_{10Hz}(k\Omega)')
+title(sprintf('Skin Prep Methods at %s, 10Hz', tp)); 
+xticks('')
+
+%% Q4
+ 
+% Does timepoint and skin preparation method have a significant
+% interaction? 
+
+rt_arm_data= [[Z10_min.t0(:,1), Z10_allT.t0(1:2:end,:)];...
+    [Z10_min.tmid(:,1), Z10_allT.tmid(1:2:end,:)];...
+    [Z10_min.tf(:,1), Z10_allT.tf(1:2:end,:)]];
+rt_arm_data_tbl= [[Z10_mean_tbl.t0(:,1), Z10_allT_tbl.t0(1:2:end,:)]; ...
+    [Z10_mean_tbl.tmid(:,1), Z10_allT_tbl.tmid(1:2:end,:)];...
+    [Z10_mean_tbl.tf(:,1), Z10_allT_tbl.tf(1:2:end,:)]];
+
+anova2(rt_arm_data,14)
+h=boxplot(rt_arm_data); set(h,{'linew'},{1.5})
+
+
+
 %% Save Images
 
 timepoint= 't0';
-freq= '1K_gender_All';
+freq= '10_raw_rightarm_gender';
 
 saveas(gcf, sprintf('Figs/skin_prep_boxplot_%s_%s', replace(timepoint, '/', '_'), freq), 'png')
 saveas(gcf, sprintf('Figs/skin_prep_boxplot_%s_%s', replace(timepoint, '/', '_'), freq), 'fig')
