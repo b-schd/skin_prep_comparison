@@ -1,8 +1,6 @@
-function [stats, multcmp]= get_anova_results(data, data_tbl, test_type, level)
+function [stats, multcmp]= get_anova_results(data, data_tbl, test_type, level, display)
 
-if nargin < 4
-    level= [];
-end
+if nargin < 5, display= true; end 
 
 % measure names
 meas= data_tbl.Properties.VariableNames(1:size(data,2)); 
@@ -48,8 +46,7 @@ switch(test_type)
         fprintf('F(%d,%d)= %0.02f p= \n', length(data), stats.DF(1), stats.F(1))
         
         disp(ranova_pval)
-    
-      
+     
         
     % Grouped within-subjects repeated measures design
     case 'rm_anova_level' 
@@ -69,7 +66,9 @@ switch(test_type)
         disp('Unknown test type')
 end
 
-anova_fig(data, data_tbl, multcmp, level);
+if display
+    anova_fig(data, data_tbl, multcmp, level);
+end
     
 end
         

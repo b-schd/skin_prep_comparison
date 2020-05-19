@@ -3,7 +3,7 @@ clear all; warning off;
 load InfoData.mat; 
 addpath('Excel Spreadsheets/'); %--add path to the Excel Spreadsheets
 
-%% SETTINGS:
+%% SETTINGS (update here):
 
 % Define Subject IDs: 
 subjNums=[3:16];
@@ -102,7 +102,7 @@ for i_t = 1:length(NT_t)
    Z1k_allT_tbl.(tlab{i_t})= array2table(Z1k_allT.(tlab{i_t}), 'VariableNames', {'Tape3M', 'SA', 'uN'});   
 end
 
-clear('NT', 'Tape3M', 'SA', 'uN', 'i_t', 'i_f', 'NT_t', 'T_t', 'i_subj','k')
+clear('NT', 'Tape3M', 'SA', 'uN', 'i_t', 'i_f', 'NT_t', 'T_t', 'i_subj','k', 'ind')
 
 %%
 
@@ -114,3 +114,6 @@ for i=1:4 %--for each skin treatment
     avgZ10_tf(:,i) = [nanmean(Z10_min.tf(:,i)); nanstd(Z10_min.tf(:,i))]; %--average 10 Hz impedance of all subjects
     
 end; clear i;
+
+
+ 

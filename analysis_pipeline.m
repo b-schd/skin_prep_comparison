@@ -1,8 +1,13 @@
 % Analysis Pipeline
 
-run Impedance_DataPull.m
+%run Impedance_DataPull.m
+load('Excel Spreadsheets/experiment_data.mat')
+load('Excel Spreadsheets/t0Fitting_ByTreatment.mat')
 load('InfoData.mat')
 addpath('helperfcns')
+
+cols=[[0, 0.4470, 0.7410]; [0.4660, 0.6740, 0.1880]; [0.6350, 0.0780, 0.1840];[0.8500, 0.3250, 0.0980]];
+
 
 %% Q1: Does skin prep method have an effect on impedance at t0?
 
@@ -52,7 +57,6 @@ data_tbl= array2table(data, 'VariableNames', {'MT', 'Tape3M', 'SA', 'uN'});
 get_anova_results(data, data_tbl, 'rm_anova'); 
 title('Skin Prep Methods at tmid/t0, 1kHz', 'interpreter', 'tex');
 ylabel('Z/Z_0 at 1KHz (a.u.)', 'interpreter', 'tex')
-
 
 %% Q3: Does gender introduce an interaction with skin prep effect?
 
@@ -143,6 +147,49 @@ rt_arm_data_tbl= [[Z10_mean_tbl.t0(:,1), Z10_allT_tbl.t0(1:2:end,:)]; ...
 
 anova2(rt_arm_data,14)
 h=boxplot(rt_arm_data); set(h,{'linew'},{1.5})
+
+
+%% Q5: Is there a difference in fitted skin treatment fitted values?
+
+sigs= zeros(6,3); 
+
+for i_param= 1:6 %1-Rsub, 2- Repi, 3-Rgel, 4-Rct, 5-Cdl, 6-Cepi
+
+NT_vals= cellfun(@(x) x(i_param,1), NoTreatment);
+SA_vals= cellfun(@(x) x(i_param,1), Salicylic);
+uN_vals= cellfun(@(x) x(i_param,1), uNeedle);
+Tape3M_vals= cellfun(@(x) x(i_param,1), AbrasiveTape);
+
+data= [NT_vals', Tape3M_vals', SA_vals', uN_vals'];
+data_tbl= array2table(data, 'VariableNames', {'NT', 'Tape3M', 'SA', 'uN'}); 
+
+mthd='quartiles';
+fprintf('Removing %d rows due to outliers \n', sum(any(isoutlier(data, mthd),2)))
+data_tbl(any(isoutlier(data, mthd),2),:)=[];
+data(any(isoutlier(data, mthd),2),:)=[];
+
+% Anova Testing
+% get_anova_results(data, data_tbl, 'rm_anova', []); 
+
+% Ranksum testing: 
+sigs(i_param, 1)= ranksum(data(:,1), data(:,2));
+sigs(i_param, 2)= ranksum(data(:,3), data(:,2));
+sigs(i_param, 3)= ranksum(data(:,4), data(:,2));
+
+% t-test 
+% [~,sigs(1)]= ttest(data(:,1), data(:,2));
+% [~,sigs(2)]= ttest(data(:,3), data(:,2));
+% [~,sigs(3)]= ttest(data(:,4), data(:,2));
+
+figure(i_param); clf
+scatter_mean_figure(data,cols,{[1,2], [3,2], [2,4]}, sigs(i_param, :), .0167)
+xticklabels({'NT', 'Tape3M', 'SA', 'uN'});
+title(rows{i_param})
+set(gcf,'Position', [560   703   331   245])
+
+%saveas(gcf, sprintf('Figs/param_fitting_t0_noOUTLIERS_%s', rows{i_param}), 'png')
+
+end
 
 
 
